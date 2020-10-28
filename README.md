@@ -5,7 +5,10 @@ ConvertTo-Cbz is a Windows Powershell script for converting comic book rar files
 ## Installation
 
 Download the .ps1 file from the respository.
-
+Import it as a module to add the function to your session.
+```powershell
+Import-Module C:\path\to\module\ConvertTo-Cbz.ps1
+```
 
 ## Usage
 

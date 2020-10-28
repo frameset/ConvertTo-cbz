@@ -29,22 +29,32 @@
    ConvertTo-Cbz -Directory "D:\Comics" -DeleteOriginals:$true
 
 #>
-
-param(
+function ConvertTo-Cbz {
+  [CmdletBinding()]
+  param(
     [Parameter(Mandatory=$true)]
-    [string] $directory
-    [string] $unrarlocation = 'C:\Program Files\WinRAR\UnRAR.exe'
-    [boolean] $deleteoriginals = $false
-)
+    [string]$directory,
 
-$startingdir = $directory
-Set-Location $startingdir
-$rars = Get-ChildItem -Recurse -Filter "*.cbr"
-foreach($rar in $rars){
-    $basepath = "$($rar.directoryname)\$($rar.basename)"
-    if(-not(Test-Path $basepath)){mkdir $basepath}
-    &"$unrarlocation" e -y $rar.fullname $basepath | Out-Null
-    Get-ChildItem -LiteralPath $basepath | Compress-Archive -DestinationPath "$basepath.zip"
-    Move-Item -LiteralPath "$basepath.zip" -Destination "$basepath.cbz"
-    if($deleteoriginals) {Remove-Item -LiteralPath $basepath -Recurse -Force}
+    [string]$unrarlocation = 'C:\Program Files (x86)\WinRAR\UnRAR.exe',
+
+    [boolean]$deleteoriginals = $false
+  )
+  
+  $startingdir = Get-Location
+  Set-Location $directory
+  $rars = Get-ChildItem -Recurse -Filter "*.cbr"
+  $i = 1
+  foreach($rar in $rars){
+    if ($rars -ne 1){
+      Write-Progress -Activity "Processing cbr files" -Status "Converting $($rar.name)" -PercentComplete ($i/$rars.count*100)}
+      $basepath = "$($rar.directoryname)\$($rar.basename)"
+      if(-not(Test-Path $basepath)){mkdir $basepath}
+      &"$unrarlocation" e -y $rar.fullname $basepath | Out-Null
+      Get-ChildItem -LiteralPath $basepath | Compress-Archive -DestinationPath "$basepath.zip" |Out-Null
+      Move-Item -LiteralPath "$basepath.zip" -Destination "$basepath.cbz" | Out-Null
+      if($deleteoriginals) {Remove-Item -LiteralPath $basepath -Recurse -Force | Out-Null}
+      #Start-Sleep -Seconds 2
+      $i++
+  }
+  Set-Location $startingdir
 }
